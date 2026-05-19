@@ -1,0 +1,16 @@
+{
+  "name": "Mi Cartera",
+  "short_name": "miCartera",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ECEEF2",
+  "theme_color": "#2563EB",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

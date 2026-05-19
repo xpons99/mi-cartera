@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="miCartera">
+<meta name="theme-color" content="#ECEEF2">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Mi Cartera</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <div class="safe-top"></div>
+
+  <div class="topbar">
+    <div class="logo">mi<span>cartera</span></div>
+    <div class="hdate" id="hdrDate"></div>
+  </div>
+
+  <div class="screens">
+
+    <!-- ══ INICIO ══ -->
+    <div class="screen on" id="sc-inicio">
+      <div class="sl">Ingresos del mes</div>
+      <div class="card">
+        <div class="ch">
+          <span class="ch-t">Panel de ingresos</span>
+          <span id="topBadge" class="bok">+0 € libre</span>
+        </div>
+        <div class="cp">
+          <div class="bignum" id="totalIngresos">0 €</div>
+          <div class="bigsub">total bruto este mes</div>
+          <div class="field">
+            <label>Sueldo base mensual</label>
+            <div class="pfxw"><span class="pfx">€</span><input class="finput" type="number" id="sueldoBase" value="2000" step="10" inputmode="decimal"></div>
+          </div>
+          <div class="extras">
+            <div class="extra"><label>Bonus / paga extra</label><input type="number" id="bonus" value="0" placeholder="0" inputmode="decimal"></div>
+            <div class="extra"><label>Guardias / extras</label><input type="number" id="guardias" value="0" placeholder="0" inputmode="decimal"></div>
+            <div class="extra"><label>Otros ingresos</label><input type="number" id="otros" value="0" placeholder="0" inputmode="decimal"></div>
+            <div class="extra" style="border-color:rgba(239,68,68,0.18)">
+              <label style="color:var(--re)">Gastos del mes</label>
+              <input type="number" id="gastosMes" value="0" placeholder="0" inputmode="decimal" class="red" readonly style="pointer-events:none;opacity:0.8;">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sl">Gastos registrados</div>
+      <div class="gastos-inicio-card">
+        <div class="gi-header">
+          <div>
+            <div class="gi-total-lbl">Total este mes</div>
+            <div class="gi-total" id="gi-total">0 €</div>
+          </div>
+          <div style="text-align:right">
+            <div class="gi-total-lbl">Movimientos</div>
+            <div style="font-size:1.3rem;font-weight:800" id="gi-count">0</div>
+          </div>
+        </div>
+        <div class="gi-bar" id="gi-bar"></div>
+        <div class="gi-cats" id="gi-cats">
+          <div class="gi-empty">Sin gastos este mes — añade en la pestaña Gastos</div>
+        </div>
+        <button class="gi-link" onclick="goTo('gastos')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Añadir gasto
+        </button>
+      </div>
+
+      <div class="sl">Distribución mensual</div>
+      <div class="card"><div class="cp">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:0.63rem;font-weight:600;color:var(--mu)">Asigna cada partida</span>
+          <span id="allocBadge" class="bok">+0 € libre</span>
+        </div>
+        <div class="allocs">
+          <div class="alloc" style="border-top-color:var(--pu)">
+            <label>MSCI World</label>
+            <div class="alloc-row"><span class="u">€</span><input id="alloc-fondo" type="number" value="100" step="10" inputmode="decimal"></div>
+          </div>
+          <div class="alloc" style="border-top-color:var(--bl)">
+            <label>Fondo monetario</label>
+            <div class="alloc-row"><span class="u">€</span><input id="alloc-monetario" type="number" value="200" step="10" inputmode="decimal"></div>
+          </div>
+          <div class="alloc" style="border-top-color:var(--or)">
+            <label>Gastos reales</label>
+            <div class="alloc-row"><span class="u">€</span><input id="alloc-gastos" type="number" value="0" readonly inputmode="decimal"></div>
+          </div>
+          <div class="alloc" style="border-top-color:var(--gr)">
+            <label>Colchón / otros</label>
+            <div class="alloc-row"><span class="u">€</span><input id="alloc-colchon" type="number" value="0" step="10" inputmode="decimal"></div>
+          </div>
+        </div>
+        <div class="dbar">
+          <div class="dseg" id="seg-f" style="background:var(--pu)"></div>
+          <div class="dseg" id="seg-m" style="background:var(--bl)"></div>
+          <div class="dseg" id="seg-g" style="background:var(--or)"></div>
+          <div class="dseg" id="seg-c" style="background:var(--gr)"></div>
+          <div class="dseg" id="seg-l" style="background:var(--fa)"></div>
+        </div>
+        <div class="dleg">
+          <div class="dli"><div class="dli-dot" style="background:var(--pu)"></div>MSCI</div>
+          <div class="dli"><div class="dli-dot" style="background:var(--bl)"></div>Monetario</div>
+          <div class="dli"><div class="dli-dot" style="background:var(--or)"></div>Gastos</div>
+          <div class="dli"><div class="dli-dot" style="background:var(--gr)"></div>Colchón</div>
+          <div class="dli"><div class="dli-dot" style="background:var(--fa)"></div>Libre</div>
+        </div>
+      </div></div>
+
+      <div class="sl">Resumen patrimonio</div>
+      <div class="metrics">
+        <div class="metric"><div class="mlbl">Tasa ahorro</div><div class="mval" style="color:var(--gr)" id="m-tasa">0%</div><div class="msub">sobre ingresos</div></div>
+        <div class="metric"><div class="mlbl">Inversión LP</div><div class="mval" style="color:var(--bl)" id="m-inv">0 €</div><div class="msub">MSCI World</div></div>
+        <div class="metric"><div class="mlbl">Liquidez</div><div class="mval" style="color:var(--pu)" id="m-liq">0 €</div><div class="msub">disponible</div></div>
+        <div class="metric"><div class="mlbl">Patrimonio</div><div class="mval" style="color:var(--tx)" id="m-total">0 €</div><div class="msub">total activos</div></div>
+      </div>
+    </div>
+
+    <!-- ══ ACTIVOS ══ -->
+    <div class="screen" id="sc-activos">
+      <div class="sl">Patrimonio total</div>
+      <div class="pat-card">
+        <div class="pat-label">Patrimonio neto</div>
+        <div class="pat-total" id="pat-total">0 €</div>
+        <div class="pat-sub">suma de todos tus activos</div>
+        <div class="pat-row">
+          <div class="pat-col"><div class="pat-col-lbl">Inversión LP</div><div class="pat-col-val" id="pat-inv">0 €</div></div>
+          <div class="pat-col"><div class="pat-col-lbl">Liquidez</div><div class="pat-col-val" id="pat-liq">0 €</div></div>
+          <div class="pat-col"><div class="pat-col-lbl">Alternativos</div><div class="pat-col-val" id="pat-alt">0 €</div></div>
+        </div>
+      </div>
+      <div class="sl">Distribución</div>
+      <div class="card"><div class="cp">
+        <div class="donut-wrap">
+          <div class="donut-c">
+            <canvas id="donutCanvas" role="img" aria-label="Distribución del patrimonio"></canvas>
+            <div class="donut-mid"><div class="donut-mid-val" id="donut-total">0€</div><div class="donut-mid-lbl">total</div></div>
+          </div>
+        </div>
+        <div class="donut-leg" id="donut-legend"></div>
+      </div></div>
+      <div class="sl">Mis activos</div>
+      <div class="alist">
+        <div class="arow cbl"><div class="ainfo"><div class="aname">Fondo monetario</div><div class="asub">Casa · objetivo ahorro</div><div class="atae"><input type="number" id="r-monetario" value="2.5" step="0.1" inputmode="decimal"><span>% TAE</span></div></div><div class="aright"><input class="aval" id="a-monetario" type="number" value="0" inputmode="decimal"></div></div>
+        <div class="arow cgr"><div class="ainfo"><div class="aname">MSCI World</div><div class="asub">Largo plazo · no tocar</div><div class="atae"><input type="number" id="r-fondo" value="10" step="1" inputmode="decimal"><span>% rent.</span></div></div><div class="aright"><input class="aval" id="a-fondo" type="number" value="0" inputmode="decimal"></div></div>
+        <div class="arow cor"><div class="ainfo"><div class="aname">Cuenta remunerada</div><div class="asub">Colchón emergencia</div><div class="atae"><input type="number" id="r-colchon" value="1.5" step="0.1" inputmode="decimal"><span>% TAE</span></div></div><div class="aright"><input class="aval" id="a-colchon" type="number" value="0" inputmode="decimal"></div></div>
+        <div class="arow cpu"><div class="ainfo"><div class="aname">Oro</div><div class="asub">Metal precioso</div></div><div class="aright"><input class="aval" id="a-oro" type="number" value="0" inputmode="decimal"></div></div>
+        <div class="arow cre"><div class="ainfo"><div class="aname">Bitcoin</div><div class="asub">Crypto</div></div><div class="aright"><input class="aval" id="a-btc" type="number" value="0" inputmode="decimal"></div></div>
+        <div class="arow cmu"><div class="ainfo"><div class="aname">Cuenta corriente</div><div class="asub">Gastos día a día</div></div><div class="aright"><input class="aval" id="a-corriente" type="number" value="0" inputmode="decimal"></div></div>
+      </div>
+    </div>
+
+    <!-- ══ GASTOS ══ -->
+    <div class="screen" id="sc-gastos">
+      <div class="sl">Este mes</div>
+      <div id="gastos-resumen"></div>
+      <div class="sl">Por categorías</div>
+      <div id="cats-container"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="add-gasto-btn" onclick="openModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Manual
+        </button>
+        <button class="add-gasto-btn" style="background:var(--gr)" onclick="openCSVModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Importar CSV
+        </button>
+      </div>
+      <div class="sl">Movimientos</div>
+      <div class="txn-list" id="txn-list"></div>
+    </div>
+
+    <!-- ══ OBJETIVOS ══ -->
+    <div class="screen" id="sc-objetivo">
+      <div class="sl">Mis objetivos</div>
+      <div class="obj-list" id="obj-list"></div>
+      <button class="add-obj-btn" onclick="openObjModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nuevo objetivo
+      </button>
+    </div>
+
+    <!-- ══ SIMULADOR ══ -->
+    <div class="screen" id="sc-calc">
+      <div class="sl">Interés compuesto</div>
+      <div class="ctabs">
+        <button class="ctab on" id="ctab-monetario" onclick="setCalcTab('monetario')">Monetario</button>
+        <button class="ctab"    id="ctab-fondo"     onclick="setCalcTab('fondo')">MSCI World</button>
+        <button class="ctab"    id="ctab-custom"    onclick="setCalcTab('custom')">Libre</button>
+      </div>
+      <div class="rcard">
+        <div class="rbig" id="c-resultado">0 €</div>
+        <div class="rlbl">capital final estimado</div>
+        <div class="rrows">
+          <div class="rrow"><span class="k">Capital inicial</span><span class="v" id="c-ini-out">0 €</span></div>
+          <div class="rrow"><span class="k">Total aportado</span><span class="v" id="c-aportado">0 €</span></div>
+          <div class="rrow"><span class="k">Intereses generados</span><span class="v" id="c-intereses">+0 €</span></div>
+          <div class="rdiv"></div>
+          <div class="rrow"><span class="k">Rentabilidad total</span><span class="v" id="c-rentpct">0%</span></div>
+        </div>
+      </div>
+      <div class="card"><div class="cp">
+        <div class="cinputs">
+          <div class="cfield"><label>Capital inicial (€)</label><input class="finput" type="number" id="c-inicial" value="5000" step="100" inputmode="decimal" oninput="onCI()"></div>
+          <div class="cfield"><label>Aportación mensual (€)</label><input class="finput" type="number" id="c-mensual" value="200" step="50" inputmode="decimal" oninput="onCI()"></div>
+        </div>
+        <div class="sfield"><label>Rentabilidad anual</label><div class="srow"><input type="range" id="c-tae-r" min="0" max="25" step="0.1" value="2.5" oninput="syncTAE(this.value)"><input type="number" id="c-tae" value="2.5" step="0.1" class="snum" inputmode="decimal" oninput="syncTAER(this.value)"></div></div>
+        <div class="sfield"><label>Horizonte temporal (años)</label><div class="srow"><input type="range" id="c-años-r" min="1" max="40" step="1" value="4" oninput="syncAños(this.value)"><input type="number" id="c-años" value="4" step="1" class="snum" inputmode="decimal" oninput="syncAñosR(this.value)"></div></div>
+      </div></div>
+      <div class="card"><div class="cp"><div class="chart-wrap"><canvas id="compChart" role="img" aria-label="Gráfico de crecimiento"></canvas></div></div></div>
+    </div>
+
+  </div><!-- /screens -->
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <button class="nb on" id="nav-inicio"   onclick="goTo('inicio')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Inicio</span></button>
+      <button class="nb"    id="nav-activos"  onclick="goTo('activos')"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Activos</span></button>
+      <button class="nb"    id="nav-gastos"   onclick="goTo('gastos')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Gastos</span></button>
+      <button class="nb"    id="nav-objetivo" onclick="goTo('objetivo')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><span>Objetivos</span></button>
+      <button class="nb"    id="nav-calc"     onclick="goTo('calc')"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg><span>Simulador</span></button>
+    </div>
+  </nav>
+</div>
+
+<!-- Modal: añadir gasto -->
+<div class="modal-bg" id="modalBg" onclick="closeMBg(event)">
+  <div class="modal">
+    <h3>Nuevo gasto</h3>
+    <div class="modal-cats" id="modalCats"></div>
+    <div class="modal-field"><label>Descripción</label><input type="text" id="m-desc" placeholder="ej. Supermercado Mercadona"></div>
+    <div class="modal-field"><label>Importe (€)</label><input type="number" id="m-amt" placeholder="0.00" inputmode="decimal" step="0.01"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-add"    onclick="addGasto()">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: nuevo objetivo -->
+<div class="modal-bg" id="objModalBg" onclick="closeObjMBg(event)">
+  <div class="obj-modal">
+    <h3>Nuevo objetivo</h3>
+    <div class="emoji-grid" id="emojiGrid"></div>
+    <div class="color-grid" id="colorGrid"></div>
+    <div class="modal-field"><label>Nombre del objetivo</label><input type="text" id="obj-name" placeholder="ej. Coche nuevo"></div>
+    <div class="modal-field"><label>Importe objetivo (€)</label><input type="number" id="obj-goal" placeholder="15000" inputmode="decimal"></div>
+    <div class="modal-field"><label>Ahorro mensual (€)</label><input type="number" id="obj-monthly" placeholder="200" inputmode="decimal"></div>
+    <div class="modal-field"><label>Ahorro actual (€)</label><input type="number" id="obj-current" placeholder="0" inputmode="decimal"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeObjModal()">Cancelar</button>
+      <button class="btn-add"    onclick="addObjetivo()">Crear objetivo</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: importar CSV -->
+<div class="modal-bg" id="csvModalBg" onclick="closeCSVMBg(event)">
+  <div class="modal">
+    <h3>Importar extracto CSV</h3>
+    <div style="display:flex;gap:7px;margin-bottom:13px">
+      <button class="csv-bank-btn on" id="csv-bbva"    onclick="selBank('bbva')">🏦 BBVA</button>
+      <button class="csv-bank-btn"    id="csv-revolut" onclick="selBank('revolut')">💳 Revolut</button>
+    </div>
+    <div id="csv-help" style="font-size:0.72rem;font-weight:500;color:var(--mu);background:var(--s2);border-radius:10px;padding:10px;margin-bottom:12px;line-height:1.5"></div>
+    <div class="modal-field">
+      <label>Selecciona el archivo CSV</label>
+      <input type="file" id="csv-file" accept=".csv,.txt" style="width:100%;background:var(--s2);border:1.5px dashed var(--b2);border-radius:11px;padding:10px 12px;font-family:var(--f);font-size:0.85rem;color:var(--tx);outline:none;">
+    </div>
+    <div id="csv-preview" style="margin-bottom:12px"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeCSVModal()">Cancelar</button>
+      <button class="btn-add" id="csv-import-btn" onclick="importCSV()" style="opacity:0.4;pointer-events:none">Importar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts (orden de dependencia) -->
+<script src="js/constants.js"></script>
+<script src="js/store.js"></script>
+<script src="js/gastos.js"></script>
+<script src="js/objetivos.js"></script>
+<script src="js/simulador.js"></script>
+<script src="js/csv.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
