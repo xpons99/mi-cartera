@@ -1,6 +1,83 @@
 // ── Importación universal CSV / XLSX ──
 let csvParsed = [];
 
+// ── OCR de tickets (Tesseract.js, lazy load) ──
+function loadTesseract() {
+  return new Promise((resolve, reject) => {
+    if (window.Tesseract) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/tesseract.js@5/dist/tesseract.min.js';
+    s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+function parseTicketText(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 1);
+
+  // Importe: busca línea con TOTAL / IMPORTE / A PAGAR y coge el número mayor de esa zona
+  let amt = null;
+  const totalRx = /(?:total|importe|a\s*pagar|sum|amount)[^\d\n]{0,12}(\d[\d\s]*[,.]\d{2})/i;
+  const totalM  = text.match(totalRx);
+  if (totalM) {
+    amt = parseAmount(totalM[1].replace(/\s/g, ''));
+  }
+  // Fallback: mayor importe con decimales del texto
+  if (!amt || isNaN(amt)) {
+    const amounts = [...text.matchAll(/\b(\d{1,4}[,.]\d{2})\b/g)]
+      .map(m => parseAmount(m[1])).filter(v => !isNaN(v) && v > 0 && v < 9999);
+    if (amounts.length) amt = Math.max(...amounts);
+  }
+
+  // Fecha
+  let date = null;
+  const dateM = text.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+  if (dateM) {
+    let y = parseInt(dateM[3]); if (y < 100) y += 2000;
+    const d = new Date(y, parseInt(dateM[2]) - 1, parseInt(dateM[1]));
+    if (!isNaN(d.getTime())) date = d;
+  }
+
+  // Descripción: primera línea con letras (nombre del comercio)
+  const desc = lines.find(l => /[a-záéíóúñA-ZÁÉÍÓÚÑ]{3,}/.test(l) && !/^\d/.test(l)) || '';
+
+  return { amt: amt || null, date, desc: desc.slice(0, 50) };
+}
+
+function openTicketScanner() {
+  $('ticket-file').value = '';
+  $('ticket-file').click();
+}
+
+async function handleTicketFile(file) {
+  if (!file) return;
+  const status = $('ticket-status');
+  status.textContent = 'Cargando OCR…';
+  status.className   = 'ticket-status loading';
+
+  try {
+    await loadTesseract();
+    status.textContent = 'Analizando ticket…';
+    const { data: { text } } = await Tesseract.recognize(file, 'spa+eng');
+    const { amt, date, desc } = parseTicketText(text);
+
+    if (amt)  { $('m-amt').value  = amt.toFixed(2); }
+    if (desc) { $('m-desc').value = desc; selectedCat = guessCat(desc); renderModalCats(); }
+    if (date) { $('m-date').value = date.toISOString().split('T')[0]; }
+
+    if (amt) {
+      status.textContent = `✓ Detectado: ${amt.toFixed(2)} €${desc ? ' · ' + desc : ''}`;
+      status.className   = 'ticket-status ok';
+    } else {
+      status.textContent = 'No se detectó importe. Rellena manualmente.';
+      status.className   = 'ticket-status warn';
+    }
+  } catch (e) {
+    status.textContent = 'Error al procesar la imagen.';
+    status.className   = 'ticket-status warn';
+  }
+}
+
 // ── SheetJS (lazy load) ──
 function loadSheetJS() {
   return new Promise((resolve, reject) => {
