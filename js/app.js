@@ -51,6 +51,44 @@ function drawDonut() {
   });
 }
 
+// ── Tooltip de la barra de distribución ──
+function showSegInfo(key) {
+  const s = parseFloat($('sueldoBase').value) || 0;
+  const e = parseFloat($('extras').value)     || 0;
+  const o = parseFloat($('otros').value)      || 0;
+  const total = s + e + o;
+
+  const f = parseFloat($('alloc-fondo').value)     || 0;
+  const m = parseFloat($('alloc-monetario').value) || 0;
+  const c = parseFloat($('alloc-colchon').value)   || 0;
+  const realGastos = getCurrentMonthGastos().reduce((s, g) => s + g.amt, 0);
+  const libre = Math.max(0, total - (f + m + c) - realGastos);
+
+  const segs = {
+    f: { name: 'MSCI World',      val: f,          color: 'var(--pu)' },
+    m: { name: 'Fondo monetario', val: m,          color: 'var(--bl)' },
+    g: { name: 'Gastos reales',   val: realGastos, color: 'var(--or)' },
+    c: { name: 'Colchón',         val: c,          color: 'var(--gr)' },
+    l: { name: 'Libre',           val: libre,      color: '#9CA3AF'   },
+  };
+
+  const seg  = segs[key];
+  const info = $('dbar-info');
+  if (!seg || seg.val <= 0) return;
+
+  if (info.dataset.active === key) {
+    info.innerHTML = ''; info.dataset.active = ''; return;
+  }
+  info.dataset.active = key;
+  const pct = total > 0 ? (seg.val / total * 100).toFixed(1) : '0.0';
+  info.innerHTML = `<div class="dbar-tooltip" style="--tc:${seg.color}">
+    <div class="dbar-tt-dot"></div>
+    <span class="dbar-tt-name">${seg.name}</span>
+    <span class="dbar-tt-val">${fmt(seg.val)}</span>
+    <span class="dbar-tt-pct">${pct}%</span>
+  </div>`;
+}
+
 // ── Ingresos ──
 function calcIngresos() {
   const s = parseFloat($('sueldoBase').value) || 0;
@@ -105,8 +143,11 @@ function updateDist(total) {
   $('seg-c').style.width = pC + '%';
   $('seg-l').style.width = pL + '%';
 
-  const tasa = total > 0 ? Math.max(0, (total - realGastos) / total * 100) : 0;
-  $('m-tasa').textContent = tasa.toFixed(0) + '%';
+  const tasa      = total > 0 ? Math.max(0, (total - realGastos) / total * 100) : 0;
+  const ahorroEur = Math.max(0, total - realGastos);
+  $('m-tasa').textContent     = tasa.toFixed(0) + '%';
+  const sub = $('m-tasa-sub');
+  if (sub) sub.textContent = fmt(ahorroEur) + ' ahorrado';
 
   saveAll();
 }

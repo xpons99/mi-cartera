@@ -97,12 +97,13 @@
           </div>
         </div>
         <div class="dbar">
-          <div class="dseg" id="seg-f" style="background:var(--pu)"></div>
-          <div class="dseg" id="seg-m" style="background:var(--bl)"></div>
-          <div class="dseg" id="seg-g" style="background:var(--or)"></div>
-          <div class="dseg" id="seg-c" style="background:var(--gr)"></div>
-          <div class="dseg" id="seg-l" style="background:var(--fa)"></div>
+          <div class="dseg" id="seg-f" style="background:var(--pu)" onclick="showSegInfo('f')"></div>
+          <div class="dseg" id="seg-m" style="background:var(--bl)" onclick="showSegInfo('m')"></div>
+          <div class="dseg" id="seg-g" style="background:var(--or)" onclick="showSegInfo('g')"></div>
+          <div class="dseg" id="seg-c" style="background:var(--gr)" onclick="showSegInfo('c')"></div>
+          <div class="dseg" id="seg-l" style="background:var(--fa)" onclick="showSegInfo('l')"></div>
         </div>
+        <div id="dbar-info"></div>
         <div class="dleg">
           <div class="dli"><div class="dli-dot" style="background:var(--pu)"></div>MSCI</div>
           <div class="dli"><div class="dli-dot" style="background:var(--bl)"></div>Monetario</div>
@@ -114,7 +115,7 @@
 
       <div class="sl">Resumen patrimonio</div>
       <div class="metrics">
-        <div class="metric"><div class="mlbl">Tasa ahorro</div><div class="mval" style="color:var(--gr)" id="m-tasa">0%</div><div class="msub">sobre ingresos</div></div>
+        <div class="metric"><div class="mlbl">Tasa ahorro</div><div class="mval" style="color:var(--gr)" id="m-tasa">0%</div><div class="msub" id="m-tasa-sub">0 € ahorrado</div></div>
         <div class="metric"><div class="mlbl">Inversión LP</div><div class="mval" style="color:var(--bl)" id="m-inv">0 €</div><div class="msub">Fondos de inversión</div></div>
         <div class="metric"><div class="mlbl">Liquidez</div><div class="mval" style="color:var(--pu)" id="m-liq">0 €</div><div class="msub">disponible</div></div>
         <div class="metric"><div class="mlbl">Patrimonio</div><div class="mval" style="color:var(--tx)" id="m-total">0 €</div><div class="msub">total activos</div></div>
