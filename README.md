@@ -67,6 +67,68 @@ Solo se importan los cargos negativos (gastos). Los duplicados se detectan autom
 
 Todos los datos se guardan en `localStorage` bajo la clave `micartera_v2`. No se envía nada a ningún servidor.
 
+## Open Banking (PSD2)
+
+La app incluye una sección "Banco" en la pestaña Gastos para sincronización automática de movimientos via Open Banking PSD2.
+
+### Servicio recomendado: GoCardless Nordigen
+
+- Gratuito para uso personal
+- Más de 2.400 bancos en Europa (BBVA, Santander, CaixaBank, ING, Sabadell, Bankinter, Openbank…)
+- Solo acceso de lectura — las credenciales bancarias nunca pasan por la app
+- Documentación: https://developer.gocardless.com/bank-account-data/overview
+
+### Arquitectura necesaria
+
+```
+[Tu banco] ← OAuth PSD2 → [Backend Node/Python] ← HTTPS → [miCartera PWA]
+```
+
+El backend actúa como intermediario seguro para:
+1. Gestionar el flujo OAuth con el banco
+2. Almacenar los tokens de acceso (nunca en el cliente)
+3. Obtener los movimientos cada 24 h y exponerlos a la app
+
+### Setup básico del backend (Node.js)
+
+```bash
+npm install node-fetch express
+```
+
+```js
+// server.js (ejemplo mínimo)
+import express from 'express';
+import fetch from 'node-fetch';
+
+const app = express();
+const BASE = 'https://bankaccountdata.gocardless.com/api/v2';
+const SECRET_ID  = process.env.NORDIGEN_SECRET_ID;
+const SECRET_KEY = process.env.NORDIGEN_SECRET_KEY;
+
+// 1. Obtener token
+app.get('/token', async (req, res) => {
+  const r = await fetch(`${BASE}/token/new/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ secret_id: SECRET_ID, secret_key: SECRET_KEY }),
+  });
+  res.json(await r.json());
+});
+
+// 2. Listar movimientos de una cuenta
+app.get('/transactions/:accountId', async (req, res) => {
+  const { access_token } = req.query;
+  const r = await fetch(`${BASE}/accounts/${req.params.accountId}/transactions/`, {
+    headers: { Authorization: `Bearer ${access_token}` },
+  });
+  res.json(await r.json());
+});
+
+app.listen(3000);
+```
+
+Los movimientos devueltos tienen el mismo formato que los CSV — pasan por el parser universal de la app.
+
 ## Tecnologías
 
 - HTML5 / CSS3 / JavaScript (vanilla, sin dependencias)

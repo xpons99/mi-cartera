@@ -1,7 +1,22 @@
-// ── Gastos ──
-let selectedCat = CATS[0].id;
+// ── Estado de mes seleccionado ──
+let selectedCat   = CATS[0].id;
+let selectedMonth = { year: new Date().getFullYear(), month: new Date().getMonth() };
 
+function isCurrentMonth() {
+  const now = new Date();
+  return selectedMonth.year === now.getFullYear() && selectedMonth.month === now.getMonth();
+}
+
+// Gastos del mes seleccionado (para pantalla de Gastos)
 function getGastosMes() {
+  return gastos.filter(g => {
+    const d = new Date(g.date);
+    return d.getMonth() === selectedMonth.month && d.getFullYear() === selectedMonth.year;
+  });
+}
+
+// Gastos del mes actual real (para Inicio y distribución — no depende de selectedMonth)
+function getCurrentMonthGastos() {
   const now = new Date();
   return gastos.filter(g => {
     const d = new Date(g.date);
@@ -9,8 +24,9 @@ function getGastosMes() {
   });
 }
 
+// ── Inicio: resumen de gastos del mes actual ──
 function updateGastosInicio() {
-  const mes   = getGastosMes();
+  const mes   = getCurrentMonthGastos();
   const total = mes.reduce((s, g) => s + g.amt, 0);
 
   $('gi-total').textContent = fmt(total);
@@ -41,9 +57,26 @@ function updateGastosInicio() {
         </div>`;
       }).join('');
   }
+}
 
-  const gastosMesInput = $('gastosMes');
-  if (gastosMesInput) gastosMesInput.value = total.toFixed(0);
+// ── Navegación de meses ──
+function monthLabel(sm) {
+  const s = sm || selectedMonth;
+  const raw = new Date(s.year, s.month, 1)
+    .toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
+function prevMonth() {
+  if (selectedMonth.month === 0) selectedMonth = { year: selectedMonth.year - 1, month: 11 };
+  else selectedMonth = { ...selectedMonth, month: selectedMonth.month - 1 };
+  renderGastos();
+}
+
+function nextMonth() {
+  if (selectedMonth.month === 11) selectedMonth = { year: selectedMonth.year + 1, month: 0 };
+  else selectedMonth = { ...selectedMonth, month: selectedMonth.month + 1 };
+  renderGastos();
 }
 
 // ── Modal añadir gasto ──
@@ -52,12 +85,17 @@ function openModal() {
   renderModalCats();
   $('m-desc').value = '';
   $('m-amt').value  = '';
+  // Fecha por defecto: hoy si es el mes actual, sino el 1 del mes seleccionado
+  const now = new Date();
+  $('m-date').value = isCurrentMonth()
+    ? now.toISOString().split('T')[0]
+    : `${selectedMonth.year}-${String(selectedMonth.month + 1).padStart(2, '0')}-01`;
   $('modalBg').classList.add('show');
   setTimeout(() => $('m-desc').focus(), 150);
 }
 
-function closeModal()    { $('modalBg').classList.remove('show'); }
-function closeMBg(e)     { if (e.target === $('modalBg')) closeModal(); }
+function closeModal() { $('modalBg').classList.remove('show'); }
+function closeMBg(e)  { if (e.target === $('modalBg')) closeModal(); }
 
 function renderModalCats() {
   $('modalCats').innerHTML = CATS.map(c =>
@@ -73,8 +111,11 @@ function selCat(id) { selectedCat = id; renderModalCats(); }
 function addGasto() {
   const amt = parseFloat($('m-amt').value);
   if (!amt || amt <= 0) return;
-  const desc = $('m-desc').value.trim() || CATS.find(c => c.id === selectedCat).name;
-  gastos.unshift({ id: Date.now(), cat: selectedCat, desc, amt, date: new Date().toISOString() });
+  const desc    = $('m-desc').value.trim() || CATS.find(c => c.id === selectedCat).name;
+  const dateVal = $('m-date').value;
+  // T12:00:00 evita cambios de día por zona horaria
+  const date    = dateVal ? new Date(dateVal + 'T12:00:00').toISOString() : new Date().toISOString();
+  gastos.unshift({ id: Date.now(), cat: selectedCat, desc, amt, date });
   saveAll();
   updateAll();
   renderGastos();
@@ -92,11 +133,18 @@ function delGasto(id) {
 function renderGastos() {
   const mes      = getGastosMes();
   const totalMes = mes.reduce((s, g) => s + g.amt, 0);
+  const label    = monthLabel();
+  const isCurr   = isCurrentMonth();
 
+  // Navegador de meses
+  $('month-nav-label').textContent = label;
+  $('month-nav-curr').style.display = isCurr ? 'none' : 'inline-flex';
+
+  // Tarjeta resumen
   $('gastos-resumen').innerHTML = `
     <div class="card"><div class="cp" style="display:flex;justify-content:space-between;align-items:center">
       <div>
-        <div style="font-size:0.55rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--mu);margin-bottom:3px">Total este mes</div>
+        <div style="font-size:0.55rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--mu);margin-bottom:3px">${label}</div>
         <div style="font-size:2rem;font-weight:800;color:var(--re);letter-spacing:-0.03em">${fmt(totalMes)}</div>
       </div>
       <div style="text-align:right">
@@ -105,6 +153,7 @@ function renderGastos() {
       </div>
     </div></div>`;
 
+  // Por categorías
   const bycat  = {};
   CATS.forEach(c => { bycat[c.id] = 0; });
   mes.forEach(g => { if (bycat[g.cat] !== undefined) bycat[g.cat] += g.amt; });
@@ -121,9 +170,10 @@ function renderGastos() {
       }).join('')}</div>`
     : '<div class="empty-state"><div class="ei">📊</div><div>Sin gastos este mes</div></div>';
 
-  $('txn-list').innerHTML = gastos.length === 0
-    ? '<div class="empty-state"><div class="ei">💸</div><div>Añade tu primer gasto</div></div>'
-    : gastos.slice(0, 40).map(g => {
+  // Lista de movimientos del mes seleccionado
+  $('txn-list').innerHTML = mes.length === 0
+    ? '<div class="empty-state"><div class="ei">💸</div><div>Sin movimientos este mes</div></div>'
+    : mes.map(g => {
         const cat = CATS.find(c => c.id === g.cat) || CATS[CATS.length - 1];
         const d   = new Date(g.date);
         return `<div class="txn">
