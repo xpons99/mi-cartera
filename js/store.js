@@ -3,10 +3,8 @@ const SK = 'micartera_v2';
 
 // alloc-gastos se excluye: se calcula automáticamente desde los gastos reales
 const INPUTS = [
-  'sueldoBase', 'bonus', 'guardias', 'otros',
+  'sueldoBase', 'extras', 'otros',
   'alloc-fondo', 'alloc-monetario', 'alloc-colchon',
-  'a-monetario', 'a-fondo', 'a-colchon', 'a-oro', 'a-btc', 'a-corriente',
-  'r-monetario', 'r-fondo', 'r-colchon',
   'c-inicial', 'c-mensual', 'c-tae', 'c-años',
 ];
 
@@ -25,6 +23,7 @@ function saveAll() {
   INPUTS.forEach(id => { const el = $(id); if (el) d['i_' + id] = el.value; });
   d.gastos    = gastos;
   d.objetivos = objetivos;
+  d.assets    = assets;
   saveStore(d);
 }
 
@@ -39,4 +38,15 @@ function loadInputs() {
   if (ar) ar.value = Math.min(parseInt($('c-años').value) || 4, 40);
   if (d.gastos)    gastos    = d.gastos;
   if (d.objetivos) objetivos = d.objetivos;
+
+  if (d.assets) {
+    assets = d.assets;
+  } else {
+    // Migración desde formato antiguo (a-monetario, a-fondo, etc.)
+    const legacy = { 1: 'a-monetario', 2: 'a-fondo', 3: 'a-colchon', 4: 'a-oro', 5: 'a-btc', 6: 'a-corriente' };
+    assets.forEach(a => {
+      const key = 'i_' + legacy[a.id];
+      if (d[key] !== undefined) a.value = parseFloat(d[key]) || 0;
+    });
+  }
 }

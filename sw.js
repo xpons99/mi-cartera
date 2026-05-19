@@ -9,6 +9,7 @@ const FILES = [
   '/js/objetivos.js',
   '/js/simulador.js',
   '/js/csv.js',
+  '/js/activos.js',
   '/js/app.js',
   '/manifest.json',
   '/icon.png',
