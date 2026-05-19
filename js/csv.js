@@ -128,13 +128,14 @@ function splitRow(line, sep) {
 }
 
 function detectColumns(headers) {
-  const h = headers.map(s => String(s).toLowerCase().replace(/['"]/g, '').trim());
+  const h = headers.map(s => String(s == null ? '' : s).toLowerCase().replace(/['"]/g, '').trim());
   const find = (...patterns) => h.findIndex(col => patterns.some(p => col.includes(p)));
 
   return {
-    dateIdx:  find('fecha', 'date', 'data', 'started', 'completed', 'valor', 'operacion', 'operació', 'mov'),
+    dateIdx:  find('fecha', 'date', 'data', 'started', 'completed', 'operaci', 'operació'),
     descIdx:  find('concepto', 'concept', 'descripci', 'description', 'detalle', 'texto', 'referencia',
                    'beneficiario', 'comercio', 'detall', 'narrativa'),
+    movIdx:   find('movimiento', 'tipo operac', 'tipo de mov', 'categoria'),
     amtIdx:   find('importe', 'amount', 'cantidad', 'total'),
     cargoIdx: find('cargo', 'débito', 'debito', 'débits', 'outgo', 'salida', 'gasto'),
     abonoIdx: find('abono', 'crédito', 'credito', 'income', 'entrada', 'ingreso'),
@@ -176,20 +177,31 @@ function parseAnyDate(str) {
   const d = new Date(str); return isNaN(d.getTime()) ? null : d;
 }
 
+// Conceptos genéricos de BBVA y otros bancos donde el Movimiento tiene más info
+const _GENERIC_RX = /^(bizum|transferencia realizada|transferencia recibida|pago con tarjeta|domiciliaci|adeudo sepa|nom[ií]na)$/i;
+
 function rowsToGastos(rows) {
   if (rows.length < 2) return [];
-  const headers = rows[0];
-  const { dateIdx, descIdx, amtIdx, cargoIdx, abonoIdx } = detectColumns(headers);
+
+  // Busca la cabecera real: primera fila con ≥ 2 celdas de texto no numéricas
+  let headerIdx = 0;
+  for (let i = 0; i < Math.min(8, rows.length); i++) {
+    const r      = (rows[i] || []).map(c => String(c == null ? '' : c).trim());
+    const nonNum = r.filter(c => c !== '' && isNaN(parseFloat(c.replace(',', '.'))));
+    if (r.filter(c => c !== '').length >= 2 && nonNum.length >= 2) { headerIdx = i; break; }
+  }
+
+  const headers = rows[headerIdx] || [];
+  const { dateIdx, descIdx, movIdx, amtIdx, cargoIdx, abonoIdx } = detectColumns(headers);
   const results = [];
 
-  for (let i = 1; i < rows.length; i++) {
+  for (let i = headerIdx + 1; i < rows.length; i++) {
     const cols = rows[i];
     if (!cols || cols.length < 2) continue;
 
-    // Importe: preferimos columna "cargo" (siempre positivo = gasto),
-    // si no existe usamos "importe" con valores negativos.
+    // Importe: cargo > importe negativo > fallback negativo
     let amt;
-    if (cargoIdx >= 0 && cols[cargoIdx] !== '' && cols[cargoIdx] !== undefined) {
+    if (cargoIdx >= 0 && cols[cargoIdx] !== '' && cols[cargoIdx] != null) {
       amt = parseAmount(cols[cargoIdx]);
       if (isNaN(amt) || amt <= 0) continue;
     } else if (amtIdx >= 0) {
@@ -198,7 +210,6 @@ function rowsToGastos(rows) {
       if (amt >= 0) continue; // ignorar ingresos
       amt = Math.abs(amt);
     } else {
-      // Fallback: buscar la primera columna con número negativo
       let found = false;
       for (let j = 0; j < cols.length; j++) {
         const v = parseAmount(cols[j]);
@@ -212,9 +223,14 @@ function rowsToGastos(rows) {
     const d = parseAnyDate(rawDate);
     if (!d) continue;
 
-    // Descripción
-    const desc = (descIdx >= 0 ? String(cols[descIdx]) : String(cols[1] || ''))
+    // Descripción: Concepto como principal; si es genérico (BBVA: BIZUM, TRANSFERENCIA…)
+    // usa la columna Movimiento que tiene el detalle real ("RECIBIDO: Horchata")
+    let desc = (descIdx >= 0 ? String(cols[descIdx] || '') : String(cols[1] || ''))
       .replace(/"/g, '').trim();
+    if (movIdx >= 0 && cols[movIdx] != null) {
+      const mov = String(cols[movIdx]).replace(/"/g, '').trim();
+      if (mov && (_GENERIC_RX.test(desc) || !desc)) desc = mov;
+    }
 
     results.push({ desc, amt, date: d.toISOString(), cat: guessCat(desc) });
   }
@@ -224,15 +240,8 @@ function rowsToGastos(rows) {
 function parseCSV(text) {
   const sep  = detectSeparator(text);
   const lines = text.split('\n').map(l => l.replace(/\r$/, '').trim()).filter(l => l);
-  // Busca la fila cabecera: primera fila con suficientes columnas no numéricas
-  let headerIdx = 0;
-  for (let i = 0; i < Math.min(6, lines.length); i++) {
-    const cols = splitRow(lines[i], sep);
-    const nonNum = cols.filter(c => isNaN(parseFloat(c.replace(',', '.'))));
-    if (cols.length >= 2 && nonNum.length >= 2) { headerIdx = i; break; }
-  }
-  const rows = lines.slice(headerIdx).map(l => splitRow(l, sep));
-  return rowsToGastos(rows);
+  const rows  = lines.map(l => splitRow(l, sep));
+  return rowsToGastos(rows); // la detección de cabecera ya está en rowsToGastos
 }
 
 async function parseXLSX(file) {
