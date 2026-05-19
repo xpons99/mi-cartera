@@ -1,61 +1,9 @@
 // ── Simulador de interés compuesto ──
-const TS = {
-  monetario: { ini: null, men: null, tae: 2.5,  años: 4  },
-  fondo:     { ini: null, men: null, tae: 10,   años: 10 },
-  custom:    { ini: null, men: null, tae: null,  años: null },
-};
-let actTab = 'monetario';
-
-function rC() {
-  return {
-    ini:  parseFloat($('c-inicial').value) || 0,
-    men:  parseFloat($('c-mensual').value) || 0,
-    tae:  parseFloat($('c-tae').value)     || 0,
-    años: parseInt($('c-años').value)      || 1,
-  };
-}
-
-function wC(s) {
-  $('c-inicial').value  = s.ini;
-  $('c-mensual').value  = s.men;
-  $('c-tae').value      = s.tae;
-  $('c-tae-r').value    = Math.min(s.tae, 25);
-  $('c-años').value     = s.años;
-  $('c-años-r').value   = Math.min(s.años, 40);
-}
-
-function setCalcTab(t) {
-  TS[actTab] = rC();
-  document.querySelectorAll('.ctab').forEach(b => b.classList.remove('on'));
-  $('ctab-' + t).classList.add('on');
-  actTab = t;
-
-  const a  = getA();
-  const aM = parseFloat(($('alloc-monetario') || {}).value) || 1000;
-  const aF = parseFloat(($('alloc-fondo')     || {}).value) || 250;
-
-  if (t === 'monetario') {
-    if (TS.monetario.ini === null) TS.monetario.ini = a.monetario;
-    if (TS.monetario.men === null) TS.monetario.men = aM;
-  } else if (t === 'fondo') {
-    if (TS.fondo.ini === null) TS.fondo.ini = a.fondo;
-    if (TS.fondo.men === null) TS.fondo.men = aF;
-  } else {
-    const c = rC();
-    if (TS.custom.ini  === null) TS.custom.ini  = c.ini;
-    if (TS.custom.men  === null) TS.custom.men  = c.men;
-    if (TS.custom.tae  === null) TS.custom.tae  = c.tae  || 5;
-    if (TS.custom.años === null) TS.custom.años = c.años || 10;
-  }
-  wC(TS[t]);
-  calcCompound();
-}
-
-function onCI()         { TS[actTab] = rC(); calcCompound(); saveAll(); }
-function syncTAE(v)     { $('c-tae').value   = parseFloat(v).toFixed(1); onCI(); }
-function syncTAER(v)    { $('c-tae-r').value = Math.min(v, 25); onCI(); }
-function syncAños(v)    { $('c-años').value  = v; onCI(); }
-function syncAñosR(v)   { $('c-años-r').value = Math.min(v, 40); onCI(); }
+function onCI()       { calcCompound(); saveAll(); }
+function syncTAE(v)   { $('c-tae').value   = parseFloat(v).toFixed(1); onCI(); }
+function syncTAER(v)  { $('c-tae-r').value = Math.min(v, 25); onCI(); }
+function syncAños(v)  { $('c-años').value  = v; onCI(); }
+function syncAñosR(v) { $('c-años-r').value = Math.min(v, 40); onCI(); }
 
 function calcCompound() {
   const ini  = parseFloat($('c-inicial').value) || 0;

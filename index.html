@@ -30,7 +30,6 @@
       <div class="card">
         <div class="ch">
           <span class="ch-t">Panel de ingresos</span>
-          <span id="topBadge" class="bok">+0 € libre</span>
         </div>
         <div class="cp">
           <div class="bignum" id="totalIngresos">0 €</div>
@@ -40,8 +39,7 @@
             <div class="pfxw"><span class="pfx">€</span><input class="finput" type="number" id="sueldoBase" value="2000" step="10" inputmode="decimal"></div>
           </div>
           <div class="extras">
-            <div class="extra"><label>Bonus / paga extra</label><input type="number" id="bonus" value="0" placeholder="0" inputmode="decimal"></div>
-            <div class="extra"><label>Guardias / extras</label><input type="number" id="guardias" value="0" placeholder="0" inputmode="decimal"></div>
+            <div class="extra"><label>Extras / bonus</label><input type="number" id="extras" value="0" placeholder="0" inputmode="decimal"></div>
             <div class="extra"><label>Otros ingresos</label><input type="number" id="otros" value="0" placeholder="0" inputmode="decimal"></div>
           </div>
         </div>
@@ -112,7 +110,7 @@
       <div class="sl">Resumen patrimonio</div>
       <div class="metrics">
         <div class="metric"><div class="mlbl">Tasa ahorro</div><div class="mval" style="color:var(--gr)" id="m-tasa">0%</div><div class="msub">sobre ingresos</div></div>
-        <div class="metric"><div class="mlbl">Inversión LP</div><div class="mval" style="color:var(--bl)" id="m-inv">0 €</div><div class="msub">MSCI World</div></div>
+        <div class="metric"><div class="mlbl">Inversión LP</div><div class="mval" style="color:var(--bl)" id="m-inv">0 €</div><div class="msub">Fondos de inversión</div></div>
         <div class="metric"><div class="mlbl">Liquidez</div><div class="mval" style="color:var(--pu)" id="m-liq">0 €</div><div class="msub">disponible</div></div>
         <div class="metric"><div class="mlbl">Patrimonio</div><div class="mval" style="color:var(--tx)" id="m-total">0 €</div><div class="msub">total activos</div></div>
       </div>
@@ -142,14 +140,11 @@
         <div class="donut-leg" id="donut-legend"></div>
       </div></div>
       <div class="sl">Mis activos</div>
-      <div class="alist">
-        <div class="arow cbl"><div class="ainfo"><div class="aname">Fondo monetario</div><div class="asub">Casa · objetivo ahorro</div><div class="atae"><input type="number" id="r-monetario" value="2.5" step="0.1" inputmode="decimal"><span>% TAE</span></div></div><div class="aright"><input class="aval" id="a-monetario" type="number" value="0" inputmode="decimal"></div></div>
-        <div class="arow cgr"><div class="ainfo"><div class="aname">MSCI World</div><div class="asub">Largo plazo · no tocar</div><div class="atae"><input type="number" id="r-fondo" value="10" step="1" inputmode="decimal"><span>% rent.</span></div></div><div class="aright"><input class="aval" id="a-fondo" type="number" value="0" inputmode="decimal"></div></div>
-        <div class="arow cor"><div class="ainfo"><div class="aname">Cuenta remunerada</div><div class="asub">Colchón emergencia</div><div class="atae"><input type="number" id="r-colchon" value="1.5" step="0.1" inputmode="decimal"><span>% TAE</span></div></div><div class="aright"><input class="aval" id="a-colchon" type="number" value="0" inputmode="decimal"></div></div>
-        <div class="arow cpu"><div class="ainfo"><div class="aname">Oro</div><div class="asub">Metal precioso</div></div><div class="aright"><input class="aval" id="a-oro" type="number" value="0" inputmode="decimal"></div></div>
-        <div class="arow cre"><div class="ainfo"><div class="aname">Bitcoin</div><div class="asub">Crypto</div></div><div class="aright"><input class="aval" id="a-btc" type="number" value="0" inputmode="decimal"></div></div>
-        <div class="arow cmu"><div class="ainfo"><div class="aname">Cuenta corriente</div><div class="asub">Gastos día a día</div></div><div class="aright"><input class="aval" id="a-corriente" type="number" value="0" inputmode="decimal"></div></div>
-      </div>
+      <div class="alist" id="asset-list"></div>
+      <button class="add-asset-btn" onclick="openAssetModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Añadir activo
+      </button>
     </div>
 
     <!-- ══ GASTOS ══ -->
@@ -186,7 +181,7 @@
         Exportar CSV del mes
       </button>
 
-      <!-- Open Banking -->
+      <!-- OPEN BANKING: descomentar el bloque de abajo para activar la UI
       <div class="sl">Banco</div>
       <div class="bank-card">
         <div style="display:flex;justify-content:space-between;align-items:center">
@@ -203,6 +198,7 @@
           Configurar Open Banking
         </button>
       </div>
+      -->
 
       <div class="sl">Movimientos</div>
       <div class="txn-list" id="txn-list"></div>
@@ -221,11 +217,6 @@
     <!-- ══ SIMULADOR ══ -->
     <div class="screen" id="sc-calc">
       <div class="sl">Interés compuesto</div>
-      <div class="ctabs">
-        <button class="ctab on" id="ctab-monetario" onclick="setCalcTab('monetario')">Monetario</button>
-        <button class="ctab"    id="ctab-fondo"     onclick="setCalcTab('fondo')">MSCI World</button>
-        <button class="ctab"    id="ctab-custom"    onclick="setCalcTab('custom')">Libre</button>
-      </div>
       <div class="rcard">
         <div class="rbig" id="c-resultado">0 €</div>
         <div class="rlbl">capital final estimado</div>
@@ -312,8 +303,35 @@
   </div>
 </div>
 
-<!-- Modal: Open Banking -->
-<div class="modal-bg" id="bankModalBg" onclick="if(event.target===this)closeBankModal()">
+<!-- Modal: añadir activo -->
+<div class="modal-bg" id="assetModalBg" onclick="closeAssetMBg(event)">
+  <div class="modal">
+    <h3>Nuevo activo</h3>
+    <div class="modal-field">
+      <label>Nombre</label>
+      <input type="text" id="new-asset-name" placeholder="ej. Cuenta nómina, Oro físico…">
+    </div>
+    <div class="modal-field">
+      <label>Tipo</label>
+      <div class="atype-grid">
+        <button class="atype-btn sel" data-type="liq" onclick="selAssetType('liq')">💧 Liquidez</button>
+        <button class="atype-btn"    data-type="inv" onclick="selAssetType('inv')">📈 Inversión LP</button>
+        <button class="atype-btn"    data-type="alt" onclick="selAssetType('alt')">🪙 Alternativo</button>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label>Rentabilidad anual (%)</label>
+      <input type="number" id="new-asset-rate" value="0" step="0.1" inputmode="decimal" placeholder="0">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeAssetModal()">Cancelar</button>
+      <button class="btn-add"    onclick="addAsset()">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Open Banking (JS preservado para reactivar fácilmente) -->
+<div class="modal-bg" id="bankModalBg" onclick="if(event.target===this)closeBankModal()" style="display:none!important">
   <div class="modal">
     <h3>🏦 Conectar tu banco (PSD2)</h3>
     <div style="font-size:0.75rem;font-weight:500;color:var(--mu);line-height:1.7;margin-bottom:14px">
@@ -338,10 +356,11 @@
 <script src="js/objetivos.js"></script>
 <script src="js/simulador.js"></script>
 <script src="js/csv.js"></script>
+<script src="js/activos.js"></script>
 <script src="js/app.js"></script>
 <script>
-// Helpers globales para el modal de banco y navegación de mes
-function openBankModal()  { $('bankModalBg').classList.add('show'); }
+// Helpers globales para Open Banking y navegación de mes
+function openBankModal()  { $('bankModalBg').style.removeProperty('display'); $('bankModalBg').classList.add('show'); }
 function closeBankModal() { $('bankModalBg').classList.remove('show'); }
 function goCurrentMonth() {
   const now = new Date();

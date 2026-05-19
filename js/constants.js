@@ -20,24 +20,18 @@ const CATS = [
 const OBJ_EMOJIS = ['🏠','🚗','🏍️','✈️','💻','📱','🎓','💍','🏖️','🛥️','🎸','🏋️','📷','🌍','💰','🎯'];
 const OBJ_COLORS = ['#2563EB','#10B981','#8B5CF6','#EF4444','#F59E0B','#EC4899','#06B6D4','#F97316'];
 
-// ── Colores y nombres de activos (donut) ──
-const ASSET_COLORS = {
-  monetario: '#2563EB',
-  fondo:     '#10B981',
-  colchon:   '#F59E0B',
-  oro:       '#8B5CF6',
-  btc:       '#EF4444',
-  corriente: '#9CA3AF',
-};
-const ASSET_NAMES = {
-  monetario: 'Monetario',
-  fondo:     'MSCI World',
-  colchon:   'Colchón',
-  oro:       'Oro',
-  btc:       'Bitcoin',
-  corriente: 'Corriente',
-};
+// ── Activos: paleta y tipos ──
+const ASSET_PALETTE = ['#2563EB','#10B981','#F59E0B','#8B5CF6','#EF4444','#9CA3AF','#EC4899','#06B6D4','#F97316','#84CC16','#14B8A6'];
+const ASSET_TYPE_LABELS = { liq: 'Liquidez', inv: 'Inversión LP', alt: 'Alternativo' };
 
 // ── Estado global ──
 let gastos    = [];
 let objetivos = [];
+let assets = [
+  { id: 1, name: 'Fondo monetario',    type: 'liq', value: 0, rate: 2.5 },
+  { id: 2, name: 'Fondos de inversión', type: 'inv', value: 0, rate: 10  },
+  { id: 3, name: 'Cuenta remunerada',  type: 'liq', value: 0, rate: 1.5 },
+  { id: 4, name: 'Oro',                type: 'alt', value: 0, rate: 0   },
+  { id: 5, name: 'Bitcoin',            type: 'alt', value: 0, rate: 0   },
+  { id: 6, name: 'Cuenta corriente',   type: 'liq', value: 0, rate: 0   },
+];
