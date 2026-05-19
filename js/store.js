@@ -27,6 +27,33 @@ function saveAll() {
   saveStore(d);
 }
 
+function exportData() {
+  const json = JSON.stringify(loadStore(), null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `micartera_backup_${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function importData() { $('backup-file').click(); }
+
+function handleBackupFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      if (!d || typeof d !== 'object') throw new Error();
+      saveStore(d);
+      location.reload();
+    } catch { alert('Archivo no válido. Selecciona un backup generado por miCartera.'); }
+  };
+  reader.readAsText(file);
+}
+
 function loadInputs() {
   const d = loadStore();
   INPUTS.forEach(id => {

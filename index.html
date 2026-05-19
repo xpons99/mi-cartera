@@ -107,6 +107,18 @@
         </div>
       </div></div>
 
+      <div class="sl">Datos</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="export-btn" onclick="exportData()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar backup
+        </button>
+        <button class="export-btn" onclick="importData()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Importar backup
+        </button>
+      </div>
+
       <div class="sl">Resumen patrimonio</div>
       <div class="metrics">
         <div class="metric"><div class="mlbl">Tasa ahorro</div><div class="mval" style="color:var(--gr)" id="m-tasa">0%</div><div class="msub">sobre ingresos</div></div>
@@ -255,7 +267,7 @@
 <!-- Modal: añadir gasto -->
 <div class="modal-bg" id="modalBg" onclick="closeMBg(event)">
   <div class="modal">
-    <h3>Nuevo gasto</h3>
+    <h3 id="modal-title">Nuevo gasto</h3>
     <div class="modal-cats" id="modalCats"></div>
     <div class="modal-field"><label>Descripción</label><input type="text" id="m-desc" placeholder="ej. Supermercado Mercadona"></div>
     <div class="modal-field"><label>Importe (€)</label><input type="number" id="m-amt" placeholder="0.00" inputmode="decimal" step="0.01"></div>
@@ -348,6 +360,9 @@
     <button class="btn-cancel" style="width:100%" onclick="closeBankModal()">Cerrar</button>
   </div>
 </div>
+
+<!-- Input oculto para importar backup JSON -->
+<input type="file" id="backup-file" accept=".json" style="display:none" onchange="handleBackupFile(this.files[0])">
 
 <!-- Scripts (orden de dependencia) -->
 <script src="js/constants.js"></script>

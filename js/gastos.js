@@ -1,6 +1,7 @@
 // ── Estado de mes seleccionado ──
 let selectedCat   = CATS[0].id;
 let selectedMonth = { year: new Date().getFullYear(), month: new Date().getMonth() };
+let _editId       = null;
 
 function isCurrentMonth() {
   const now = new Date();
@@ -79,17 +80,32 @@ function nextMonth() {
   renderGastos();
 }
 
-// ── Modal añadir gasto ──
+// ── Modal añadir / editar gasto ──
 function openModal() {
+  _editId = null;
   selectedCat = CATS[0].id;
   renderModalCats();
   $('m-desc').value = '';
   $('m-amt').value  = '';
-  // Fecha por defecto: hoy si es el mes actual, sino el 1 del mes seleccionado
+  $('modal-title').textContent = 'Nuevo gasto';
   const now = new Date();
   $('m-date').value = isCurrentMonth()
     ? now.toISOString().split('T')[0]
     : `${selectedMonth.year}-${String(selectedMonth.month + 1).padStart(2, '0')}-01`;
+  $('modalBg').classList.add('show');
+  setTimeout(() => $('m-desc').focus(), 150);
+}
+
+function openEditModal(id) {
+  const g = gastos.find(x => x.id === id);
+  if (!g) return;
+  _editId = id;
+  selectedCat = g.cat;
+  renderModalCats();
+  $('m-desc').value = g.desc;
+  $('m-amt').value  = g.amt;
+  $('modal-title').textContent = 'Editar gasto';
+  $('m-date').value = new Date(g.date).toISOString().split('T')[0];
   $('modalBg').classList.add('show');
   setTimeout(() => $('m-desc').focus(), 150);
 }
@@ -113,9 +129,15 @@ function addGasto() {
   if (!amt || amt <= 0) return;
   const desc    = $('m-desc').value.trim() || CATS.find(c => c.id === selectedCat).name;
   const dateVal = $('m-date').value;
-  // T12:00:00 evita cambios de día por zona horaria
   const date    = dateVal ? new Date(dateVal + 'T12:00:00').toISOString() : new Date().toISOString();
-  gastos.unshift({ id: Date.now(), cat: selectedCat, desc, amt, date });
+
+  if (_editId !== null) {
+    const i = gastos.findIndex(g => g.id === _editId);
+    if (i >= 0) gastos[i] = { ...gastos[i], cat: selectedCat, desc, amt, date };
+  } else {
+    gastos.unshift({ id: Date.now(), cat: selectedCat, desc, amt, date });
+  }
+  gastos.sort((a, b) => new Date(b.date) - new Date(a.date));
   saveAll();
   updateAll();
   renderGastos();
@@ -170,14 +192,14 @@ function renderGastos() {
       }).join('')}</div>`
     : '<div class="empty-state"><div class="ei">📊</div><div>Sin gastos este mes</div></div>';
 
-  // Lista de movimientos del mes seleccionado
+  // Lista de movimientos
   $('txn-list').innerHTML = mes.length === 0
     ? '<div class="empty-state"><div class="ei">💸</div><div>Sin movimientos este mes</div></div>'
     : mes.map(g => {
         const cat = CATS.find(c => c.id === g.cat) || CATS[CATS.length - 1];
         const d   = new Date(g.date);
         return `<div class="txn">
-          <div class="txn-l">
+          <div class="txn-l" onclick="openEditModal(${g.id})">
             <div class="txn-icon">${cat.icon}</div>
             <div>
               <div class="txn-desc">${g.desc}</div>
