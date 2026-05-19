@@ -78,6 +78,87 @@ async function handleTicketFile(file) {
   }
 }
 
+// ── PDF.js (lazy load) ──
+function loadPDFJS() {
+  return new Promise((resolve, reject) => {
+    if (window.pdfjsLib) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js';
+    s.onload = () => {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+      resolve();
+    };
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function parsePDF(file) {
+  await loadPDFJS();
+  const buffer = await file.arrayBuffer();
+  const pdf    = await pdfjsLib.getDocument({ data: buffer }).promise;
+
+  const lines = [];
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page    = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    // Agrupa items por posición Y para reconstruir líneas
+    const byY = {};
+    for (const item of content.items) {
+      const y = Math.round(item.transform[5]);
+      if (!byY[y]) byY[y] = [];
+      byY[y].push({ x: item.transform[4], str: item.str });
+    }
+    const ys = Object.keys(byY).map(Number).sort((a, b) => b - a);
+    for (const y of ys) {
+      const txt = byY[y].sort((a, b) => a.x - b.x).map(i => i.str).join(' ').trim();
+      if (txt) lines.push(txt);
+    }
+  }
+  return parsePDFLines(lines);
+}
+
+function parsePDFLines(lines) {
+  const results = [];
+  const dateRx  = /(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/;
+  // Importes con posible signo negativo y formato europeo o anglosajón
+  const amtRx   = /[-−]\s*\d{1,6}(?:[.,]\d{3})*[.,]\d{2}/g;
+
+  for (const line of lines) {
+    const dateM = line.match(dateRx);
+    if (!dateM) continue;
+
+    const rawAmts = [...line.matchAll(amtRx)];
+    if (rawAmts.length === 0) continue;
+
+    const amt = Math.abs(parseAmount(rawAmts[0][0].replace(/\s/g, '')));
+    if (!amt || isNaN(amt) || amt <= 0) continue;
+
+    // Fecha
+    let yr = parseInt(dateM[3]); if (yr < 100) yr += 2000;
+    const d = new Date(yr, parseInt(dateM[2]) - 1, parseInt(dateM[1]));
+    if (isNaN(d.getTime())) continue;
+
+    // Descripción: texto entre la fecha y el primer importe
+    const dateEnd  = line.indexOf(dateM[0]) + dateM[0].length;
+    const firstAmt = line.search(/[-−]\s*\d{1,6}(?:[.,]\d{3})*[.,]\d{2}/);
+    const desc = line
+      .slice(dateEnd, firstAmt > dateEnd ? firstAmt : undefined)
+      .replace(/\s+/g, ' ').trim().slice(0, 60) || 'Movimiento';
+
+    results.push({ desc, amt, date: d.toISOString(), cat: guessCat(desc) });
+  }
+
+  // Deduplicar por fecha + importe + inicio de descripción
+  const seen = new Set();
+  return results.filter(g => {
+    const k = g.date.slice(0, 10) + '|' + g.amt.toFixed(2) + '|' + g.desc.slice(0, 15);
+    if (seen.has(k)) return false;
+    seen.add(k); return true;
+  });
+}
+
 // ── SheetJS (lazy load) ──
 function loadSheetJS() {
   return new Promise((resolve, reject) => {
@@ -255,9 +336,8 @@ async function parseXLSX(file) {
 
 async function parseFile(file) {
   const name = file.name.toLowerCase();
-  if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
-    return await parseXLSX(file);
-  }
+  if (name.endsWith('.xlsx') || name.endsWith('.xls')) return await parseXLSX(file);
+  if (name.endsWith('.pdf'))                           return await parsePDF(file);
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload  = e => resolve(parseCSV(e.target.result));
