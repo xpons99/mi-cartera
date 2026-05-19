@@ -43,10 +43,6 @@
             <div class="extra"><label>Bonus / paga extra</label><input type="number" id="bonus" value="0" placeholder="0" inputmode="decimal"></div>
             <div class="extra"><label>Guardias / extras</label><input type="number" id="guardias" value="0" placeholder="0" inputmode="decimal"></div>
             <div class="extra"><label>Otros ingresos</label><input type="number" id="otros" value="0" placeholder="0" inputmode="decimal"></div>
-            <div class="extra" style="border-color:rgba(239,68,68,0.18)">
-              <label style="color:var(--re)">Gastos del mes</label>
-              <input type="number" id="gastosMes" value="0" placeholder="0" inputmode="decimal" class="red" readonly style="pointer-events:none;opacity:0.8;">
-            </div>
           </div>
         </div>
       </div>
@@ -158,20 +154,56 @@
 
     <!-- ══ GASTOS ══ -->
     <div class="screen" id="sc-gastos">
-      <div class="sl">Este mes</div>
+
+      <!-- Navegador de meses -->
+      <div class="month-nav">
+        <button class="mnav-btn" onclick="prevMonth()">‹</button>
+        <span class="month-nav-label" id="month-nav-label"></span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button class="mnav-curr" id="month-nav-curr" onclick="goCurrentMonth()" style="display:none">Hoy</button>
+          <button class="mnav-btn" onclick="nextMonth()">›</button>
+        </div>
+      </div>
+
+      <div class="sl" id="gastos-sl-mes">Este mes</div>
       <div id="gastos-resumen"></div>
       <div class="sl">Por categorías</div>
       <div id="cats-container"></div>
+
+      <!-- Acciones -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button class="add-gasto-btn" onclick="openModal()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Manual
+          Añadir gasto
         </button>
         <button class="add-gasto-btn" style="background:var(--gr)" onclick="openCSVModal()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Importar CSV
+          Importar
         </button>
       </div>
+      <button class="export-btn" onclick="exportGastos()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar CSV del mes
+      </button>
+
+      <!-- Open Banking -->
+      <div class="sl">Banco</div>
+      <div class="bank-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:0.85rem;font-weight:800;margin-bottom:3px">Sincronización automática</div>
+            <div style="font-size:0.65rem;font-weight:500;color:var(--mu)">
+              <span class="bank-status-dot"></span>No conectado
+            </div>
+          </div>
+          <div style="font-size:1.6rem">🏦</div>
+        </div>
+        <button class="bank-connect-btn" onclick="openBankModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          Configurar Open Banking
+        </button>
+      </div>
+
       <div class="sl">Movimientos</div>
       <div class="txn-list" id="txn-list"></div>
     </div>
@@ -236,6 +268,7 @@
     <div class="modal-cats" id="modalCats"></div>
     <div class="modal-field"><label>Descripción</label><input type="text" id="m-desc" placeholder="ej. Supermercado Mercadona"></div>
     <div class="modal-field"><label>Importe (€)</label><input type="number" id="m-amt" placeholder="0.00" inputmode="decimal" step="0.01"></div>
+    <div class="modal-field"><label>Fecha</label><input type="date" id="m-date"></div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
       <button class="btn-add"    onclick="addGasto()">Añadir</button>
@@ -260,24 +293,41 @@
   </div>
 </div>
 
-<!-- Modal: importar CSV -->
+<!-- Modal: importar CSV / XLSX -->
 <div class="modal-bg" id="csvModalBg" onclick="closeCSVMBg(event)">
   <div class="modal">
-    <h3>Importar extracto CSV</h3>
-    <div style="display:flex;gap:7px;margin-bottom:13px">
-      <button class="csv-bank-btn on" id="csv-bbva"    onclick="selBank('bbva')">🏦 BBVA</button>
-      <button class="csv-bank-btn"    id="csv-revolut" onclick="selBank('revolut')">💳 Revolut</button>
+    <h3>Importar extracto</h3>
+    <div style="font-size:0.72rem;font-weight:500;color:var(--mu);background:var(--s2);border-radius:10px;padding:10px;margin-bottom:12px;line-height:1.6">
+      Acepta <strong>CSV y XLSX</strong> de cualquier banco. Las columnas de fecha, descripción e importe se detectan automáticamente.
     </div>
-    <div id="csv-help" style="font-size:0.72rem;font-weight:500;color:var(--mu);background:var(--s2);border-radius:10px;padding:10px;margin-bottom:12px;line-height:1.5"></div>
     <div class="modal-field">
-      <label>Selecciona el archivo CSV</label>
-      <input type="file" id="csv-file" accept=".csv,.txt" style="width:100%;background:var(--s2);border:1.5px dashed var(--b2);border-radius:11px;padding:10px 12px;font-family:var(--f);font-size:0.85rem;color:var(--tx);outline:none;">
+      <label>Selecciona el archivo</label>
+      <input type="file" id="csv-file" accept=".csv,.xlsx,.xls,.txt" style="width:100%;background:var(--s2);border:1.5px dashed var(--b2);border-radius:11px;padding:10px 12px;font-family:var(--f);font-size:0.85rem;color:var(--tx);outline:none;">
     </div>
     <div id="csv-preview" style="margin-bottom:12px"></div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeCSVModal()">Cancelar</button>
       <button class="btn-add" id="csv-import-btn" onclick="importCSV()" style="opacity:0.4;pointer-events:none">Importar</button>
     </div>
+  </div>
+</div>
+
+<!-- Modal: Open Banking -->
+<div class="modal-bg" id="bankModalBg" onclick="if(event.target===this)closeBankModal()">
+  <div class="modal">
+    <h3>🏦 Conectar tu banco (PSD2)</h3>
+    <div style="font-size:0.75rem;font-weight:500;color:var(--mu);line-height:1.7;margin-bottom:14px">
+      La conexión directa con tu banco usa el estándar <strong>Open Banking PSD2</strong> a través de <strong>GoCardless Nordigen</strong> (gratuito para uso personal).<br><br>
+      <strong>Bancos compatibles en España:</strong> BBVA, Santander, CaixaBank, ING, Sabadell, Bankinter, Openbank y más de 2.400 entidades en Europa.<br><br>
+      <strong>Cómo funciona:</strong><br>
+      1. Se necesita un servidor backend (Node.js / Python) que gestione los tokens OAuth de forma segura.<br>
+      2. El servidor obtiene los movimientos de tu banco cada 24 h y los envía a la app.<br>
+      3. Tus credenciales bancarias <em>nunca</em> pasan por la app — solo acceso de lectura.
+    </div>
+    <div style="background:#EFF6FF;border-radius:10px;padding:10px;font-size:0.72rem;font-weight:600;color:var(--bl);margin-bottom:14px">
+      📖 Consulta el README.md → sección "Open Banking" para las instrucciones de configuración del backend.
+    </div>
+    <button class="btn-cancel" style="width:100%" onclick="closeBankModal()">Cerrar</button>
   </div>
 </div>
 
@@ -289,5 +339,15 @@
 <script src="js/simulador.js"></script>
 <script src="js/csv.js"></script>
 <script src="js/app.js"></script>
+<script>
+// Helpers globales para el modal de banco y navegación de mes
+function openBankModal()  { $('bankModalBg').classList.add('show'); }
+function closeBankModal() { $('bankModalBg').classList.remove('show'); }
+function goCurrentMonth() {
+  const now = new Date();
+  selectedMonth = { year: now.getFullYear(), month: now.getMonth() };
+  renderGastos();
+}
+</script>
 </body>
 </html>

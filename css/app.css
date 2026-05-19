@@ -241,6 +241,21 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 #compChart{width:100%;display:block;}
 ::-webkit-scrollbar{display:none;}
 
-/* CSV import */
-.csv-bank-btn{flex:1;background:var(--s2);border:1.5px solid var(--b1);border-radius:10px;padding:9px;font-family:var(--f);font-size:0.8rem;font-weight:700;color:var(--mu);cursor:pointer;}
-.csv-bank-btn.on{background:#EFF6FF;border-color:var(--bl);color:var(--bl);}
+/* Navegador de meses */
+.month-nav{display:flex;align-items:center;justify-content:space-between;background:var(--s1);border-radius:var(--rad);padding:9px 14px;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.month-nav-label{font-size:0.88rem;font-weight:800;}
+.mnav-btn{background:none;border:none;font-size:1.5rem;color:var(--bl);cursor:pointer;padding:0 8px;font-weight:700;line-height:1;}
+.mnav-curr{font-size:0.58rem;font-weight:700;background:#EFF6FF;color:var(--bl);border:1px solid #BFDBFE;padding:2px 8px;border-radius:20px;cursor:pointer;white-space:nowrap;}
+
+/* Botón exportar */
+.export-btn{width:100%;background:var(--s2);border:1.5px solid var(--b1);border-radius:12px;padding:11px;font-family:var(--f);font-size:0.82rem;font-weight:700;color:var(--mu);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+.export-btn:active{background:var(--fa);}
+
+/* Tarjeta Open Banking */
+.bank-card{background:var(--s1);border-radius:var(--rad);padding:14px;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-left:4px solid var(--bl);}
+.bank-status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--re);margin-right:5px;}
+.bank-status-dot.on{background:var(--gr);}
+.bank-connect-btn{background:var(--bl);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-family:var(--f);font-size:0.82rem;font-weight:700;cursor:pointer;margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;}
+
+/* Input fecha en modal */
+input[type=date]{-webkit-appearance:none;appearance:none;}

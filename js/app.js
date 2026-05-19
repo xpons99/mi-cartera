@@ -88,8 +88,8 @@ function updateDist(total) {
   const m = parseFloat($('alloc-monetario').value)  || 0;
   const c = parseFloat($('alloc-colchon').value)    || 0;
 
-  // Gastos reales del mes actual
-  const realGastos = getGastosMes().reduce((s, g) => s + g.amt, 0);
+  // Gastos reales del mes actual (siempre mes en curso, no el mes seleccionado)
+  const realGastos = getCurrentMonthGastos().reduce((s, g) => s + g.amt, 0);
 
   // Sincroniza el campo de display de gastos reales en la distribución
   const gg = $('alloc-gastos');
@@ -170,13 +170,7 @@ function bindAll() {
   const cf = $('csv-file');
   if (cf) cf.addEventListener('change', function () {
     const file = this.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const text = e.target.result;
-      csvParsed = csvBank === 'bbva' ? parseBBVA(text) : parseRevolut(text);
-      showCSVPreview();
-    };
-    reader.readAsText(file, 'UTF-8');
+    handleFileChange(file);
   });
 }
 
