@@ -149,6 +149,7 @@ body{height:100%;height:100dvh;overflow:hidden;background:var(--bg);color:var(--
 .aname-input{width:100%;background:transparent;border:none;font-family:var(--f);font-size:0.85rem;font-weight:700;color:var(--tx);outline:none;margin-bottom:1px;}
 .aname-input:focus{border-bottom:1.5px solid var(--bl);}
 .asub{font-size:0.58rem;font-weight:500;color:var(--mu);}
+.atype-sel{background:transparent;border:none;font-family:var(--f);font-size:0.58rem;font-weight:500;color:var(--mu);outline:none;padding:0;margin:1px 0;cursor:pointer;-webkit-appearance:none;appearance:none;}
 .atae{display:flex;align-items:center;gap:4px;margin-top:4px;}
 .atae span{font-size:0.56rem;font-weight:500;color:var(--mu);}
 .atae input{background:transparent;border:none;border-bottom:1.5px dashed var(--fa);color:var(--bl);font-family:var(--f);font-size:0.68rem;font-weight:700;outline:none;width:32px;text-align:center;padding:1px 0;}

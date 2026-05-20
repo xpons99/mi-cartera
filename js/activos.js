@@ -16,7 +16,11 @@ function renderActivos() {
       <div class="arow" style="--ac:${col}">
         <div class="ainfo">
           <input class="aname-input" value="${a.name.replace(/"/g,'&quot;')}" onchange="updateAssetField(${a.id},'name',this.value)">
-          <div class="asub">${typeLbl}</div>
+          <select class="atype-sel" onchange="updateAssetField(${a.id},'type',this.value);updateAll()">
+            <option value="liq" ${a.type==='liq'?'selected':''}>Liquidez</option>
+            <option value="inv" ${a.type==='inv'?'selected':''}>Inversión LP</option>
+            <option value="alt" ${a.type==='alt'?'selected':''}>Alternativo</option>
+          </select>
           <div class="atae">
             <input type="number" value="${a.rate || 0}" step="0.1" inputmode="decimal" onchange="updateAssetField(${a.id},'rate',parseFloat(this.value)||0)">
             <span>% rent.</span>

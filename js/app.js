@@ -143,11 +143,18 @@ function updateDist(total) {
   $('seg-c').style.width = pC + '%';
   $('seg-l').style.width = pL + '%';
 
-  const tasa      = total > 0 ? Math.max(0, (total - realGastos) / total * 100) : 0;
-  const ahorroEur = Math.max(0, total - realGastos);
-  $('m-tasa').textContent     = tasa.toFixed(0) + '%';
+  // Tasa de ahorro real: lo que sobra después de gastos E inversiones
+  const tasa      = total > 0 ? (total - realGastos - f - m - c) / total * 100 : 0;
+  const ahorroEur = total - realGastos - f - m - c;
+  const tasaEl = $('m-tasa');
+  if (tasaEl) {
+    tasaEl.textContent = tasa.toFixed(0) + '%';
+    tasaEl.style.color = tasa < 0 ? 'var(--re)' : 'var(--gr)';
+  }
   const sub = $('m-tasa-sub');
-  if (sub) sub.textContent = fmt(ahorroEur) + ' ahorrado';
+  if (sub) sub.textContent = ahorroEur >= 0
+    ? fmt(ahorroEur) + ' libre'
+    : fmt(Math.abs(ahorroEur)) + ' excedido';
 
   saveAll();
 }
