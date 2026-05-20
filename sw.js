@@ -1,4 +1,4 @@
-const CACHE = 'micartera-v3';
+const CACHE = 'micartera-v4';
 // BASE se detecta automáticamente: funciona en localhost Y en usuario.github.io/repo/
 const BASE = self.location.pathname.replace(/sw\.js$/, '');
 const FILES = [
